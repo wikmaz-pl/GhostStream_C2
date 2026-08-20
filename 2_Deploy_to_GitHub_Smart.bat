@@ -10,7 +10,7 @@ echo.
 set /p repo_name="🔗 Podaj nazwe projektu (np. GhostStream_C2): "
 set repo_url=https://github.com/wikmaz-pl/!repo_name!.git
 
-:: Dynamiczny, bezpieczny tag wersji
+rem Dynamiczny, bezpieczny tag wersji
 set tag_ver=v1.0.!RANDOM!
 
 echo.
