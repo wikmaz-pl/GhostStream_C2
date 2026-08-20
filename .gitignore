@@ -1,0 +1,10 @@
+__pycache__/
+venv_ghost/
+Release/
+data/*.db
+data/public_url.txt
+data/reactions/*.webm
+uploads/*.mp4
+build/
+dist/
+*.spec

