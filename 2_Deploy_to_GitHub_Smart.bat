@@ -27,12 +27,12 @@ git remote remove origin 2>nul
 git remote add origin !repo_url!
 
 echo.
-echo 🔍 Sprawdzam obecnosc GitHub CLI (gh.exe)...
+echo 🔍 Sprawdzam obecnosc GitHub CLI (gh.exe)
 gh --version >nul 2>&1
 
 IF !ERRORLEVEL! EQU 0 (
     echo ⚡ WYKRYTO GITHUB CLI! 
-    echo 1. Tworze/Aktualizuje repozytorium...
+    echo 1. Tworze/Aktualizuje repozytorium.
     gh repo create wikmaz-pl/!repo_name! --public --source=. --remote=origin --push 2>nul
     
     rem Wypychanie kodu glownego
