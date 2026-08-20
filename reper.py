@@ -1,4 +1,9 @@
-@echo off
+import os
+
+def fix_deploy_script():
+    print("🚀 Naprawianie i wzmacnianie Smart Git Deploy...")
+    
+    bat_content = """@echo off
 setlocal EnableDelayedExpansion
 chcp 65001 >nul
 color 0B
@@ -61,3 +66,12 @@ IF !ERRORLEVEL! EQU 0 (
     echo ✅ Kod wyslany, ale plik ZIP musisz dodac do 'Releases' recznie!
     pause
 )
+"""
+    
+    with open('2_Deploy_to_GitHub_Smart.bat', 'w', encoding='utf-8') as f:
+        f.write(bat_content)
+        
+    print("✅ Gotowe! Plik '2_Deploy_to_GitHub_Smart.bat' zostal naprawiony i zaktualizowany o nowe systemy bezpieczenstwa.")
+
+if __name__ == "__main__":
+    fix_deploy_script()
