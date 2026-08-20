@@ -12,12 +12,16 @@ else:
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 REACT_DIR = os.path.join(DATA_DIR, 'reactions')
 UPLOADS_DIR = os.path.join(BASE_DIR, 'uploads')
+BIN_DIR = os.path.join(BASE_DIR, 'bin')
 
 os.makedirs(REACT_DIR, exist_ok=True)
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 DB_PATH = os.path.join(DATA_DIR, 'wikmaz_ghost.db')
 URL_FILE = os.path.join(DATA_DIR, 'public_url.txt')
+
+local_ffmpeg = os.path.join(BIN_DIR, 'ffmpeg.exe')
+FFMPEG_CMD = f'"{local_ffmpeg}"' if os.path.exists(local_ffmpeg) else "ffmpeg"
 
 active_sessions = {}
 
@@ -46,7 +50,9 @@ def optimize_video(input_path, output_path, profile):
     if profile == "source":
         os.rename(input_path, output_path)
         return
-    cmd = f'ffmpeg -y -i "{input_path}" -vf "scale=-2:480" -c:v libx264 -preset fast -b:v 600k -maxrate 600k -bufsize 1200k -r 24 -c:a aac -b:a 96k -movflags +faststart "{output_path}"' if profile == "mobile" else f'ffmpeg -y -i "{input_path}" -vf "scale=-2:720" -c:v libx264 -preset fast -b:v 1500k -maxrate 1500k -bufsize 3000k -r 30 -c:a aac -b:a 128k -movflags +faststart "{output_path}"'
+    cmd_mobile = f'{FFMPEG_CMD} -y -i "{input_path}" -vf "scale=-2:480" -c:v libx264 -preset fast -b:v 600k -maxrate 600k -bufsize 1200k -r 24 -c:a aac -b:a 96k -movflags +faststart "{output_path}"'
+    cmd_std = f'{FFMPEG_CMD} -y -i "{input_path}" -vf "scale=-2:720" -c:v libx264 -preset fast -b:v 1500k -maxrate 1500k -bufsize 3000k -r 30 -c:a aac -b:a 128k -movflags +faststart "{output_path}"'
+    cmd = cmd_mobile if profile == "mobile" else cmd_std
     try:
         subprocess.run(cmd, shell=True, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         os.remove(input_path)
@@ -143,6 +149,27 @@ def export_data():
     stats = [dict(row) for row in query_db("SELECT * FROM stats")]
     tokens = [dict(row) for row in query_db("SELECT * FROM tokens")]
     return jsonify({"export_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "captured_stats": stats, "generated_tokens": tokens})
+
+# 🛠️ LIVE AJAX API (Zarządzanie Tokenami) 🛠️
+@app_nexus.route('/api/toggle_cam', methods=['POST'])
+def api_toggle_cam():
+    token = request.json.get('token')
+    td = query_db("SELECT require_camera FROM tokens WHERE token=?", (token,), one=True)
+    if td:
+        new_val = 0 if td['require_camera'] == 1 else 1
+        query_db("UPDATE tokens SET require_camera=? WHERE token=?", (new_val, token))
+        return jsonify({"status": "ok", "new_val": new_val})
+    return jsonify({"status": "error"}), 400
+
+@app_nexus.route('/api/toggle_used', methods=['POST'])
+def api_toggle_used():
+    token = request.json.get('token')
+    td = query_db("SELECT used FROM tokens WHERE token=?", (token,), one=True)
+    if td:
+        new_val = 0 if td['used'] == 1 else 1
+        query_db("UPDATE tokens SET used=? WHERE token=?", (new_val, token))
+        return jsonify({"status": "ok", "new_val": new_val})
+    return jsonify({"status": "error"}), 400
 
 def run_servers():
     import logging
